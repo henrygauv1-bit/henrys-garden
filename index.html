@@ -43,7 +43,9 @@ render=function(){
  let entries=db.plants.flatMap(p=>p.notes.map(n=>({plant:p.name,...n}))).sort((a,b)=>b.created.localeCompare(a.created));
  document.getElementById('journal').innerHTML=entries.map(n=>`<div class="card"><strong>${esc(n.plant)}</strong><div class="muted">${fmt(n.created)}</div><p style="white-space:pre-wrap">${esc(n.text)}</p></div>`).join('')||'<p>No journal entries yet.</p>';
 };
+let lastWeatherFetch=0;
 async function loadWeather(){
+ lastWeatherFetch=Date.now();
  const status=document.getElementById('weatherstatus'),target=document.getElementById('weather');
  status.textContent='Loading live forecast...';
  try{
@@ -55,5 +57,9 @@ async function loadWeather(){
  target.innerHTML=`<p><strong>Current temperature:</strong> ${Math.round(j.current.temperature_2m)}°F · Humidity ${j.current.relative_humidity_2m}%</p>`+d.time.map((date,i)=>`<div class="card"><strong>${esc(date)}</strong><p>High ${Math.round(d.temperature_2m_max[i])}°F · Low ${Math.round(d.temperature_2m_min[i])}°F</p><p>Chance of rain: <strong>${d.precipitation_probability_max[i]??'—'}%</strong> · Expected rainfall: <strong>${d.precipitation_sum[i]??'—'} in</strong></p><p>Max wind: ${Math.round(d.wind_speed_10m_max[i])} mph</p></div>`).join('');
  }catch(e){status.textContent='Live weather unavailable: '+e.message;target.textContent='Connect to the internet and try again.'}
 }
-document.getElementById('td').value='2026-10-15';render();
+document.getElementById('td').value=new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});render();
+// Fetch weather automatically when the app opens, then refresh while the page remains open.
+loadWeather();
+setInterval(()=>{if(!document.hidden && navigator.onLine)loadWeather()},30*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && navigator.onLine && Date.now()-lastWeatherFetch>30*60*1000)loadWeather()});
 </script></html>
