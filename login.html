@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Henry's Garden Login</title><style>body{font:16px system-ui,sans-serif;background:#f4f7f2;color:#18352b}main{max-width:450px;margin:8vh auto;padding:24px;background:white;border-radius:14px}input,button{display:block;width:100%;box-sizing:border-box;padding:12px;margin:10px 0}button{background:#225b3b;color:white;border:0;border-radius:8px}</style></head><body><main><h1>Henry's Garden</h1><p>Private account login</p><p id="status"></p><form id="login"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Password<input id="password" type="password" autocomplete="current-password" required></label><button>Sign in</button></form><button id="logout" hidden>Sign out</button><p><a href="./">Return to garden</a></p></main><script type="module">
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const client=createClient('https://rusipqvmxqehcztaszuv.supabase.co','sb_publishable__uZp5I17ZULKVpN0x2ZgOw_Tq286_C0');
+const status=document.querySelector('#status'),form=document.querySelector('#login'),logout=document.querySelector('#logout');
+async function refresh(){const {data,error}=await client.auth.getUser();if(data.user){status.textContent='Signed in as '+data.user.email+'. Cloud garden access is not enabled yet.';form.hidden=true;logout.hidden=false;}else{status.textContent=error&&error.name!=='AuthSessionMissingError'?error.message:'Sign in using your invited account.';form.hidden=false;logout.hidden=true;}}
+form.addEventListener('submit',async e=>{e.preventDefault();status.textContent='Signing in…';const {error}=await client.auth.signInWithPassword({email:document.querySelector('#email').value,password:document.querySelector('#password').value});if(error){status.textContent=error.message;return;}await refresh();});
+logout.addEventListener('click',async()=>{await client.auth.signOut();await refresh();});
+await refresh();
+</script></body></html>
